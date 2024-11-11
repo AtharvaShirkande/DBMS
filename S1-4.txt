@@ -1,0 +1,268 @@
+CREATE DATABASE Hotels;
+USE Hotels;
+CREATE TABLE Hotel (
+    HotelNo INT PRIMARY KEY,
+    Name VARCHAR(100),
+    City VARCHAR(100)
+);
+
+CREATE TABLE Room (
+    RoomNo INT,
+    HotelNo INT,
+    Type VARCHAR(20),
+    Price DECIMAL(10, 2),
+    PRIMARY KEY (RoomNo, HotelNo),
+    FOREIGN KEY (HotelNo) REFERENCES Hotel(HotelNo)
+);
+
+CREATE TABLE Guest (
+    GuestNo INT PRIMARY KEY,
+    GuestName VARCHAR(100),
+    GuestAddress VARCHAR(255)
+);
+
+CREATE TABLE Booking (
+    HotelNo INT,
+    GuestNo INT,
+    DateFrom DATE,
+    DateTo DATE,
+    RoomNo INT,
+    PRIMARY KEY (HotelNo, GuestNo, DateFrom),
+    FOREIGN KEY (HotelNo) REFERENCES Hotel(HotelNo),
+    FOREIGN KEY (GuestNo) REFERENCES Guest(GuestNo)
+);
+-- Hotel data
+INSERT INTO Hotel (HotelNo, Name, City) VALUES 
+(1, 'Grosvenor Hotel', 'London'),
+(2, 'Grand Hotel', 'Manchester'),
+(3, 'Royal Palace', 'London');
+
+-- Room data
+INSERT INTO Room (RoomNo, HotelNo, Type, Price) VALUES 
+(101, 1, 'Double', 80.00),
+(102, 1, 'Single', 50.00),
+(201, 2, 'Double', 60.00),
+(202, 2, 'Family', 100.00),
+(301, 3, 'Double', 40.00),
+(302, 3, 'Family', 45.00);
+
+-- Guest data
+INSERT INTO Guest (GuestNo, GuestName, GuestAddress) VALUES 
+(1, 'Alice Johnson', '123 Elm Street'),
+(2, 'Bob Smith', '456 Maple Avenue'),
+(3, 'Carol White', '789 Oak Lane');
+
+-- Booking data
+INSERT INTO Booking (HotelNo, GuestNo, DateFrom, DateTo, RoomNo) VALUES 
+(1, 1, '2024-04-01', '2024-04-07', 101),
+(2, 2, '2024-04-05', '2024-04-10', 201),
+(3, 3, '2024-04-03', '2024-04-05', 301);
+
+-- 1
+SELECT SUM(Price) AS TotalRevenue
+FROM Room
+WHERE Type = 'Double';
+-- 2
+SELECT Room.RoomNo, Room.Type, Room.Price, Guest.GuestName
+FROM Room
+LEFT JOIN Booking ON Room.RoomNo = Booking.RoomNo AND Room.HotelNo = Booking.HotelNo
+LEFT JOIN Guest ON Booking.GuestNo = Guest.GuestNo
+WHERE Room.HotelNo = (SELECT HotelNo FROM Hotel WHERE Name = 'Grosvenor Hotel');
+-- 3
+SELECT HotelNo, AVG(BookingCount) AS AvgBookingsApril
+FROM (
+    SELECT HotelNo, COUNT(*) AS BookingCount
+    FROM Booking
+    WHERE EXTRACT(MONTH FROM DateFrom) = 4
+    GROUP BY HotelNo, EXTRACT(YEAR FROM DateFrom)
+) AS MonthlyBookings
+GROUP BY HotelNo;
+-- 4
+CREATE INDEX idx_room_price ON Room(Price);
+SELECT * FROM Room WHERE Price < 50.00;
+-- 5
+SELECT * FROM Hotel;
+-- 6
+SELECT * FROM Hotel WHERE City = 'London';
+-- 7
+UPDATE Room
+SET Price = Price * 1.05;
+-- 8
+SELECT Hotel.HotelNo, Hotel.Name, COUNT(Room.RoomNo) AS NumberOfRooms
+FROM Hotel
+JOIN Room ON Hotel.HotelNo = Room.HotelNo
+WHERE Hotel.City = 'London'
+GROUP BY Hotel.HotelNo, Hotel.Name;
+-- 9
+SELECT RoomNo, HotelNo, Type, Price
+FROM Room
+WHERE (Type = 'Double' OR Type = 'Family') AND Price < 40.00
+ORDER BY Price ASC;
+
+
+The following tables form part of a database held in a relational DBMS:
+Hotel (HotelNo, Name, City) HotelNo is primary key
+Room (RoomNo, HotelNo, Type, Price)
+Booking (HotelNo, GuestNo, DateFrom, DateTo, RoomNo)
+Guest (GuestNo, GuestName, GuestAddress) GuestNo is primary key
+Solve following queries by SQL
+1. What is the total revenue per night from all double rooms?
+2. List the details of all rooms at the Grosvenor Hotel, including the name of
+the guest staying in the room, if the room is occupied.
+3. What is the average number of bookings for each hotel in April?
+4. Create index on one of the field and show is performance in query.
+5. List full details of all hotels.
+6. List full details of all hotels in London.
+7. Update the price of all rooms by 5%.
+8. List the number of rooms in each hotel in London.
+9. List all double or family rooms with a price below £40.00 per night, in
+ascending order of price.
+
+CREATE TABLE Hotel (
+    HotelNo INT PRIMARY KEY,
+    Name VARCHAR(50),
+    City VARCHAR(50)
+);
+
+-- Room Table
+CREATE TABLE Room (
+    RoomNo INT,
+    HotelNo INT,
+    Type VARCHAR(20),
+    Price DECIMAL(10, 2),
+    PRIMARY KEY (RoomNo, HotelNo),
+    FOREIGN KEY (HotelNo) REFERENCES Hotel(HotelNo)
+);
+
+-- Guest Table
+CREATE TABLE Guest (
+    GuestNo INT PRIMARY KEY,
+    GuestName VARCHAR(50),
+    GuestAddress VARCHAR(100)
+);
+
+-- Booking Table
+CREATE TABLE Booking (
+    HotelNo INT,
+    GuestNo INT,
+    DateFrom DATE,
+    DateTo DATE,
+    RoomNo INT,
+    PRIMARY KEY (HotelNo, GuestNo, DateFrom),
+    FOREIGN KEY (HotelNo, RoomNo) REFERENCES Room(HotelNo, RoomNo),
+    FOREIGN KEY (GuestNo) REFERENCES Guest(GuestNo)
+);
+Step 2: Insert Sample Data
+sql
+Copy code
+-- Insert values into Hotel table
+INSERT INTO Hotel (HotelNo, Name, City) VALUES
+(1, 'Grosvenor Hotel', 'London'),
+(2, 'Hilton', 'Paris'),
+(3, 'Ritz', 'New York'),
+(4, 'Marriott', 'London');
+
+-- Insert values into Room table
+INSERT INTO Room (RoomNo, HotelNo, Type, Price) VALUES
+(101, 1, 'Double', 100.00),
+(102, 1, 'Single', 80.00),
+(103, 1, 'Double', 100.00),
+(201, 2, 'Single', 90.00),
+(202, 2, 'Suite', 200.00),
+(301, 3, 'Double', 150.00),
+(302, 3, 'Family', 120.00),
+(401, 4, 'Suite', 250.00),
+(402, 4, 'Double', 110.00);
+
+-- Insert values into Guest table
+INSERT INTO Guest (GuestNo, GuestName, GuestAddress) VALUES
+(1, 'Alice Brown', '123 Elm St, Boston'),
+(2, 'Bob Smith', '456 Oak St, Miami'),
+(3, 'Charlie Green', '789 Maple Ave, San Francisco'),
+(4, 'Daisy Blue', '101 Pine St, Chicago');
+
+-- Insert values into Booking table
+INSERT INTO Booking (HotelNo, GuestNo, DateFrom, DateTo, RoomNo) VALUES
+(1, 1, '2024-04-10', '2024-04-15', 101),
+(1, 2, '2024-04-12', '2024-04-20', 103),
+(2, 3, '2024-04-05', '2024-04-10', 201),
+(3, 4, '2024-04-12', '2024-04-15', 301),
+(4, 1, '2024-04-01', '2024-04-07', 402);
+Step 3: Queries
+Using the above data, you can test the queries for the given problems:
+
+Total revenue per night from all double rooms
+
+sql
+Copy code
+SELECT SUM(Price) AS total_revenue
+FROM Room
+WHERE Type = 'Double';
+Details of all rooms at the Grosvenor Hotel, including guest name if occupied
+
+sql
+Copy code
+SELECT r.RoomNo, r.Type, r.Price, g.GuestName
+FROM Room r
+JOIN Hotel h ON r.HotelNo = h.HotelNo
+LEFT JOIN Booking b ON r.RoomNo = b.RoomNo AND r.HotelNo = b.HotelNo
+LEFT JOIN Guest g ON b.GuestNo = g.GuestNo
+WHERE h.Name = 'Grosvenor Hotel';
+Average number of bookings for each hotel in April
+
+sql
+Copy code
+SELECT HotelNo, AVG(booking_count) AS avg_bookings
+FROM (
+    SELECT HotelNo, COUNT(*) AS booking_count
+    FROM Booking
+    WHERE MONTH(DateFrom) = 4
+    GROUP BY HotelNo, DateFrom
+) AS bookings_in_april
+GROUP BY HotelNo;
+Create an index on Room's Type field
+
+sql
+Copy code
+CREATE INDEX idx_room_type ON Room(Type);
+Use the index to enhance query performance:
+
+sql
+Copy code
+SELECT RoomNo, Type, Price
+FROM Room
+WHERE Type = 'Double';
+Full details of all hotels
+
+sql
+Copy code
+SELECT * FROM Hotel;
+Full details of all hotels in London
+
+sql
+Copy code
+SELECT * FROM Hotel
+WHERE City = 'London';
+Update the price of all rooms by 5%
+
+sql
+Copy code
+UPDATE Room
+SET Price = Price * 1.05;
+Number of rooms in each hotel in London
+
+sql
+Copy code
+SELECT h.HotelNo, h.Name, COUNT(r.RoomNo) AS room_count
+FROM Hotel h
+JOIN Room r ON h.HotelNo = r.HotelNo
+WHERE h.City = 'London'
+GROUP BY h.HotelNo;
+All double or family rooms with a price below £40.00 per night, sorted by price
+
+sql
+Copy code
+SELECT RoomNo, Type, Price
+FROM Room
+WHERE (Type = 'Double' OR Type = 'Family') AND Price < 40.00
+ORDER BY Price ASC;

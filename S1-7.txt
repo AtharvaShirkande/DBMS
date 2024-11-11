@@ -1,0 +1,102 @@
+7. Consider the following database
+Project(project_id,proj_name,chief_arch) , project_id is primary key
+Employee(Emp_id,Emp_name) , Emp_id is primary key
+Assigned-To(Project_id,Emp_id)
+Find the SQL queries for the following:
+1. Get the details of employees working on project C353
+2. Get employee number of employees working on project C353
+3. Obtain details of employees working on Database project
+4. Get details of employees working on both C353 and C354
+5. Get employee numbers of employees who do not work on project C453
+
+CREATE TABLE Project (
+    project_id VARCHAR(10) PRIMARY KEY,
+    proj_name VARCHAR(100),
+    chief_arch VARCHAR(100)
+);
+
+-- Employee Table
+CREATE TABLE Employee (
+    Emp_id INT PRIMARY KEY,
+    Emp_name VARCHAR(100)
+);
+
+-- Assigned-To Table
+CREATE TABLE Assigned_To (
+    project_id VARCHAR(10),
+    Emp_id INT,
+    FOREIGN KEY (project_id) REFERENCES Project(project_id),
+    FOREIGN KEY (Emp_id) REFERENCES Employee(Emp_id)
+);
+Step 2: Insert Sample Data
+sql
+Copy code
+-- Insert values into Project table
+INSERT INTO Project (project_id, proj_name, chief_arch) VALUES
+('C353', 'Web Development', 'John Doe'),
+('C354', 'Database Project', 'Jane Smith'),
+('C355', 'Mobile App', 'Alice Brown');
+
+-- Insert values into Employee table
+INSERT INTO Employee (Emp_id, Emp_name) VALUES
+(1, 'Michael Green'),
+(2, 'Sarah White'),
+(3, 'David Black'),
+(4, 'Emily Brown'),
+(5, 'James Blue');
+
+-- Insert values into Assigned-To table
+INSERT INTO Assigned_To (project_id, Emp_id) VALUES
+('C353', 1),
+('C353', 2),
+('C353', 4),
+('C354', 2),
+('C354', 3),
+('C355', 1),
+('C355', 5);
+Step 3: SQL Queries for the Given Tasks
+Get the details of employees working on project C353.
+
+sql
+Copy code
+SELECT E.Emp_id, E.Emp_name
+FROM Employee E
+JOIN Assigned_To A ON E.Emp_id = A.Emp_id
+WHERE A.project_id = 'C353';
+Get employee numbers of employees working on project C353.
+
+sql
+Copy code
+SELECT E.Emp_id
+FROM Employee E
+JOIN Assigned_To A ON E.Emp_id = A.Emp_id
+WHERE A.project_id = 'C353';
+Obtain details of employees working on the 'Database Project'.
+
+sql
+Copy code
+SELECT E.Emp_id, E.Emp_name
+FROM Employee E
+JOIN Assigned_To A ON E.Emp_id = A.Emp_id
+JOIN Project P ON A.project_id = P.project_id
+WHERE P.proj_name = 'Database Project';
+Get details of employees working on both C353 and C354.
+
+sql
+Copy code
+SELECT E.Emp_id, E.Emp_name
+FROM Employee E
+JOIN Assigned_To A1 ON E.Emp_id = A1.Emp_id
+JOIN Assigned_To A2 ON E.Emp_id = A2.Emp_id
+WHERE A1.project_id = 'C353' AND A2.project_id = 'C354';
+Get employee numbers of employees who do not work on project C453.
+
+sql
+Copy code
+SELECT E.Emp_id
+FROM Employee E
+WHERE E.Emp_id NOT IN (
+    SELECT A.Emp_id
+    FROM Assigned_To A
+    WHERE A.project_id = 'C453'
+);
