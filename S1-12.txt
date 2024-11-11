@@ -1,0 +1,137 @@
+Create the following tables. Solve queries by SQL
+• Deposit (actno,cname,bname,amount,adate)
+• Branch (bname,city)
+• Customers (cname, city)
+• Borrow(loanno,cname,bname, amount)
+Add primary key and foreign key wherever applicable.
+Insert data into the above created tables.
+ Solve following queries by SQL
+1. Display customer name having living city Bombay and branch city Nagpur
+2. Display customer name having same living city as their branch city
+3. Display customer name who are borrowers as well as depositors and having
+living city Nagpur.
+4. Display borrower names having deposit amount greater than 1000 and loan
+amount greater than 2000
+5. Display customer name living in the city where branch of depositor sunil is
+located.
+6. Create an index on deposit table
+
+CREATE TABLE Branch (
+    bname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50)
+);
+
+-- Create Customers table
+CREATE TABLE Customers (
+    cname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50)
+);
+
+-- Create Deposit table with foreign keys referencing Customers and Branch
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(12, 2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+-- Create Borrow table with foreign keys referencing Customers and Branch
+CREATE TABLE Borrow (
+    loanno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(12, 2),
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+Step 2: Insert Sample Data into the Tables
+sql
+Copy code
+-- Insert data into Branch table
+INSERT INTO Branch (bname, city) VALUES
+('Perryridge', 'New York'),
+('Riverside', 'San Francisco'),
+('Oakwood', 'Los Angeles'),
+('Karolbagh', 'Delhi'),
+('Nagpur', 'Nagpur');
+
+-- Insert data into Customers table
+INSERT INTO Customers (cname, city) VALUES
+('Anil', 'Bombay'),
+('John', 'San Francisco'),
+('Emma', 'Los Angeles'),
+('Ravi', 'New York'),
+('Sara', 'Nagpur'),
+('Sunil', 'Nagpur');
+
+-- Insert data into Deposit table
+INSERT INTO Deposit (actno, cname, bname, amount, adate) VALUES
+(101, 'Anil', 'Perryridge', 5000.00, '1996-12-10'),
+(102, 'John', 'Riverside', 4000.00, '1997-02-20'),
+(103, 'Emma', 'Oakwood', 3000.00, '1997-03-15'),
+(104, 'Ravi', 'Perryridge', 6000.00, '1996-11-10'),
+(105, 'Sara', 'Riverside', 7000.00, '1997-04-01'),
+(106, 'Sunil', 'Karolbagh', 8000.00, '1997-05-05');
+
+-- Insert data into Borrow table
+INSERT INTO Borrow (loanno, cname, bname, amount) VALUES
+(201, 'Anil', 'Perryridge', 10000.00),
+(202, 'John', 'Riverside', 15000.00),
+(203, 'Emma', 'Oakwood', 20000.00),
+(204, 'Ravi', 'Perryridge', 25000.00),
+(205, 'Sara', 'Riverside', 30000.00),
+(206, 'Sunil', 'Karolbagh', 4000.00);
+Step 3: SQL Queries for the Given Tasks
+Display customer name having living city Bombay and branch city Nagpur.
+
+sql
+Copy code
+SELECT c.cname
+FROM Customers c
+JOIN Deposit d ON c.cname = d.cname
+JOIN Branch b ON d.bname = b.bname
+WHERE c.city = 'Bombay' AND b.city = 'Nagpur';
+Display customer name having same living city as their branch city.
+
+sql
+Copy code
+SELECT c.cname
+FROM Customers c
+JOIN Deposit d ON c.cname = d.cname
+JOIN Branch b ON d.bname = b.bname
+WHERE c.city = b.city;
+Display customer name who are borrowers as well as depositors and having living city Nagpur.
+
+sql
+Copy code
+SELECT DISTINCT c.cname
+FROM Customers c
+JOIN Deposit d ON c.cname = d.cname
+JOIN Borrow b ON c.cname = b.cname
+WHERE c.city = 'Nagpur';
+Display borrower names having deposit amount greater than 1000 and loan amount greater than 2000.
+
+sql
+Copy code
+SELECT b.cname
+FROM Borrow b
+JOIN Deposit d ON b.cname = d.cname
+WHERE d.amount > 1000 AND b.amount > 2000;
+Display customer name living in the city where branch of depositor Sunil is located.
+
+sql
+Copy code
+SELECT c.cname
+FROM Customers c
+WHERE c.city = (SELECT b.city
+                 FROM Branch b
+                 JOIN Deposit d ON b.bname = d.bname
+                 WHERE d.cname = 'Sunil');
+Create an index on deposit table.
+
+sql
+Copy code
+CREATE INDEX idx_deposit_amount ON Deposit(amount);
