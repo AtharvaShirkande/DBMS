@@ -1,0 +1,72 @@
+Create the Collection Student_Data( Student _ID, Student _Name, Department, Marks )and solve the
+following:
+1. Display all Students based on their departments along with an average Marks of a particular
+department.
+2. Displays the number of Students associated along with a particular department.
+3. Display list of Students with the highest Marks in each Department in descending order
+of Marks.
+4. Create an index on field Student_ID.
+5. Create an index on fields “Student_Name‘ and “Department”.
+6. Drop an index on field Student_ID.
+7. Drop an index on fields “Student_Name‘ and “Department”.
+
+db.createCollection("Student_Data");
+
+db.Student_Data.insertMany([
+  { Student_ID: "S1", Student_Name: "Alice", Department: "Computer Science", Marks: 85 },
+  { Student_ID: "S2", Student_Name: "Bob", Department: "Mechanical", Marks: 75 },
+  { Student_ID: "S3", Student_Name: "Charlie", Department: "Electrical", Marks: 90 },
+  { Student_ID: "S4", Student_Name: "David", Department: "Computer Science", Marks: 95 },
+  { Student_ID: "S5", Student_Name: "Eve", Department: "Mechanical", Marks: 88 },
+  { Student_ID: "S6", Student_Name: "Frank", Department: "Electrical", Marks: 80 },
+  { Student_ID: "S7", Student_Name: "Grace", Department: "Computer Science", Marks: 78 },
+  { Student_ID: "S8", Student_Name: "Hank", Department: "Mechanical", Marks: 92 },
+  { Student_ID: "S9", Student_Name: "Ivy", Department: "Electrical", Marks: 85 },
+  { Student_ID: "S10", Student_Name: "Jack", Department: "Computer Science", Marks: 88 }
+]);
+
+
+db.Student_Data.aggregate([
+  {
+    $group: {
+      _id: "$Department",
+      Average_Marks: { $avg: "$Marks" },
+      Students: { $push: { Student_ID: "$Student_ID", Student_Name: "$Student_Name", Marks: "$Marks" } }
+    }
+  }
+]);
+
+
+db.Student_Data.aggregate([
+  {
+    $group: {
+      _id: "$Department",
+      Student_Count: { $sum: 1 }
+    }
+  }
+]);
+
+
+db.Student_Data.aggregate([
+  {
+    $sort: { Marks: -1 }
+  },
+  {
+    $group: {
+      _id: "$Department",
+      Top_Student: { $first: "$$ROOT" }
+    }
+  },
+  {
+    $replaceRoot: { newRoot: "$Top_Student" }
+  }
+]);
+
+
+db.Student_Data.createIndex({ Student_ID: 1 });
+
+db.Student_Data.createIndex({ Student_Name: 1, Department: 1 });
+
+db.Student_Data.dropIndex("Student_ID_1");
+
+db.Student_Data.dropIndex("Student_Name_1_Department_1");

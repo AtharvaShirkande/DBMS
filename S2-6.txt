@@ -1,0 +1,214 @@
+CREATE TABLE Employee (
+    emp_id INT PRIMARY KEY,
+    dept_id INT,
+    emp_name VARCHAR(100),
+    DoJ DATE, -- Date of Joining
+    salary DECIMAL(10, 2),
+    commission DECIMAL(5, 2) DEFAULT 0.00,
+    job_title VARCHAR(100)
+);
+
+
+INSERT INTO Employee (emp_id, dept_id, emp_name, DoJ, salary, job_title)
+VALUES
+(1, 101, 'John Doe', '2015-08-15', 15000, 'Manager'),
+(2, 102, 'Jane Smith', '2010-06-10', 9000, 'Developer'),
+(3, 103, 'Emily Davis', '2017-12-01', 2500, 'Intern'),
+(4, 101, 'Michael Brown', '2008-09-30', 12000, 'Team Lead');
+
+
+
+DELIMITER //
+
+CREATE PROCEDURE RecordCommission()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE emp_id INT;
+    DECLARE emp_salary DECIMAL(10, 2);
+    DECLARE emp_experience INT;
+    DECLARE emp_commission DECIMAL(5, 2);
+
+    -- Declare a cursor to loop over each employee
+    DECLARE emp_cursor CURSOR FOR
+    SELECT emp_id, salary, DATEDIFF(CURDATE(), DoJ) / 365
+    FROM Employee;
+
+    -- Declare a handler for when the cursor finishes
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    -- Open the cursor
+    OPEN emp_cursor;
+
+    -- Loop through each employee
+    emp_loop: LOOP
+        FETCH emp_cursor INTO emp_id, emp_salary, emp_experience;
+
+        IF done THEN
+            LEAVE emp_loop;
+        END IF;
+
+        -- Apply commission logic based on the conditions
+        IF emp_salary > 10000 THEN
+            SET emp_commission = 0.004 * emp_salary;
+        ELSEIF emp_salary < 3000 THEN
+            SET emp_commission = 0.0025 * emp_salary;
+        ELSEIF emp_experience > 10 THEN
+            SET emp_commission = 0.0035 * emp_salary;
+        ELSE
+            SET emp_commission = 0.0015 * emp_salary;
+        END IF;
+
+        -- Debug: Output the commission calculation
+        SELECT emp_id, emp_salary, emp_experience, emp_commission;
+
+        -- Update the commission in the employee record
+        UPDATE Employee
+        SET commission = emp_commission
+        WHERE emp_id = emp_id;
+    END LOOP;
+
+    -- Close the cursor
+    CLOSE emp_cursor;
+END //
+
+DELIMITER ;
+
+CALL RecordCommission();
+
+
+DELIMITER //
+
+CREATE FUNCTION GetDepartmentManager(dept_id INT)
+RETURNS VARCHAR(100)
+DETERMINISTIC
+BEGIN
+    DECLARE manager_name VARCHAR(100);
+
+    -- Query to find the manager of the given department
+    SELECT emp_name
+    INTO manager_name
+    FROM Employee
+    WHERE dept_id = dept_id AND job_title = 'Manager'
+    LIMIT 1;
+
+    RETURN manager_name;
+END //
+
+DELIMITER ;
+
+SELECT GetDepartmentManager(101);
+
+
+
+
+
+
+*********************
+CREATE TABLE Employee (
+    emp_id INT PRIMARY KEY,
+    dept_id INT,
+    emp_name VARCHAR(100),
+    DoJ DATE,
+    salary DECIMAL(10, 2),
+    commission DECIMAL(10, 2),
+    job_title VARCHAR(50)
+);
+
+
+INSERT INTO Employee (emp_id, dept_id, emp_name, DoJ, salary, commission, job_title)
+VALUES
+(115, 1, 'Anusha Shetty', '2010-01-01', 15000, NULL, 'Developer'),
+(116, 2, 'Amit Sharma', '2015-05-15', 12000, NULL, 'Manager'),
+(117, 1, 'Ravi Kumar', '2008-03-21', 2500, NULL, 'Developer'),
+(118, 3, 'Priya Mehta', '2012-11-10', 9000, NULL, 'HR'),
+(119, 2, 'Neha Patel', '2018-07-01', 18000, NULL, 'Manager');
+
+
+
+CREATE TABLE Salary_Increment (
+    emp_id INT,
+    new_salary DECIMAL(10, 2),
+    FOREIGN KEY (emp_id) REFERENCES Employee(emp_id)
+);
+
+
+
+-- Sample insert (after running the stored procedure)
+INSERT INTO Salary_Increment (emp_id, new_salary)
+VALUES
+(115, 16000),
+(116, 13000),
+(117, 2700),
+(118, 9900),
+(119, 20000);
+
+
+DELIMITER //
+
+CREATE PROCEDURE CalculateCommission(IN in_emp_id INT)
+BEGIN
+    DECLARE v_salary DECIMAL(10, 2);
+    DECLARE v_doJ DATE;
+    DECLARE v_experience INT;
+    DECLARE v_commission DECIMAL(10, 2);
+
+    -- Fetch employee salary and Date of Joining (DoJ)
+    SELECT salary, DoJ INTO v_salary, v_doJ
+    FROM Employee
+    WHERE emp_id = in_emp_id;
+
+    -- Calculate experience (difference in years)
+    SET v_experience = TIMESTAMPDIFF(YEAR, v_doJ, CURDATE());
+
+    -- Calculate commission based on salary and experience
+    IF v_salary > 10000 THEN
+        SET v_commission = v_salary * 0.004;  -- 0.4% commission
+    ELSEIF v_salary < 10000 AND v_experience > 10 THEN
+        SET v_commission = v_salary * 0.0035;  -- 0.35% commission
+    ELSEIF v_salary < 3000 THEN
+        SET v_commission = v_salary * 0.0025;  -- 0.25% commission
+    ELSE
+        SET v_commission = v_salary * 0.0015;  -- 0.15% commission
+    END IF;
+
+    -- Update the commission in Employee table
+    UPDATE Employee
+    SET commission = v_commission
+    WHERE emp_id = in_emp_id;
+
+    -- Insert new salary into Salary_Increment table (salary + commission)
+    INSERT INTO Salary_Increment (emp_id, new_salary)
+    VALUES (in_emp_id, v_salary + v_commission);
+
+END //
+
+DELIMITER ;
+
+
+CALL CalculateCommission(115);
+
+
+
+
+DELIMITER //
+
+CREATE FUNCTION GetManagerName(dept_id INT)
+RETURNS VARCHAR(100)
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE v_manager_name VARCHAR(100);
+
+    -- Fetch the name of the manager based on the department ID
+    SELECT emp_name INTO v_manager_name
+    FROM Employee
+    WHERE dept_id = dept_id AND job_title = 'Manager'
+    LIMIT 1;  -- Ensure only one row is returned
+
+    -- Return the manager's name
+    RETURN v_manager_name;
+END //
+
+DELIMITER ;
+
+SELECT GetManagerName(2);

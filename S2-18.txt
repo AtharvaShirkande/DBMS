@@ -1,0 +1,82 @@
+-- Create Account table
+CREATE TABLE Account (
+    Account_No INT PRIMARY KEY,
+    Cust_Name VARCHAR(100),
+    Balance DECIMAL(10, 2),
+    NoOfYears INT
+);
+
+-- Create Earned_Interest table
+CREATE TABLE Earned_Interest (
+    Account_No INT PRIMARY KEY,
+    Interest_Amt DECIMAL(10, 2),
+    FOREIGN KEY (Account_No) REFERENCES Account(Account_No)
+);
+
+-- Insert sample data into Account table
+INSERT INTO Account (Account_No, Cust_Name, Balance, NoOfYears)
+VALUES 
+(101, 'Alice Smith', 50000.00, 5),
+(102, 'Bob Johnson', 30000.00, 3),
+(103, 'Charlie Brown', 80000.00, 10);
+
+DELIMITER $$
+
+CREATE PROCEDURE calculate_interest(
+    IN p_account_no INT,  -- Account number input
+    IN p_interest_rate DECIMAL(5,2)  -- Interest rate input
+)
+BEGIN
+    DECLARE v_balance DECIMAL(10, 2);
+    DECLARE v_years INT;
+    DECLARE v_interest_amt DECIMAL(10, 2);
+
+    -- Fetch Balance and NoOfYears for the given Account_No
+    SELECT Balance, NoOfYears INTO v_balance, v_years
+    FROM Account
+    WHERE Account_No = p_account_no;
+
+    -- Calculate simple interest (Interest = P * R * T / 100)
+    SET v_interest_amt = (v_balance * p_interest_rate * v_years) / 100;
+
+    -- Insert the calculated interest into Earned_Interest table
+    INSERT INTO Earned_Interest (Account_No, Interest_Amt)
+    VALUES (p_account_no, v_interest_amt);
+
+    -- Output the interest amount
+    SELECT CONCAT('Interest for Account No ', p_account_no, ' is ', v_interest_amt) AS Message;
+
+END $$
+
+DELIMITER ;
+
+CALL calculate_interest(101, 5);
+SELECT * FROM Earned_Interest;
+
+
+
+DELIMITER //
+
+CREATE FUNCTION GetHighBalanceAccounts ()
+RETURNS TEXT
+DETERMINISTIC
+BEGIN
+    DECLARE result TEXT DEFAULT '';
+    
+    -- Loop through each record with Balance > 50000 and concatenate the details
+    SELECT GROUP_CONCAT(CONCAT('Account_No: ', Account_No, 
+                               ', Cust_Name: ', Cust_Name, 
+                               ', Balance: ', Balance, 
+                               ', NoOfYears: ', NoOfYears)
+                        SEPARATOR '\n')
+    INTO result
+    FROM Account
+    WHERE Balance > 50000;
+
+    RETURN result;
+END //
+
+DELIMITER ;
+
+
+SELECT GetHighBalanceAccounts();

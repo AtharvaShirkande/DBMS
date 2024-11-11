@@ -1,0 +1,107 @@
+CREATE TABLE Employee (
+    Emp_id INT PRIMARY KEY,
+    Emp_Name VARCHAR(50),
+    Salary DECIMAL(10, 2)
+);
+
+INSERT INTO Employee (Emp_id, Emp_Name, Salary) VALUES
+(1, 'John Doe', 55000),
+(2, 'Jane Smith', 45000),
+(3, 'Alice Brown', 70000),
+(4, 'Bob White', 30000),
+(5, 'Charlie Black', 80000);
+
+DELIMITER //
+
+CREATE PROCEDURE DisplayEmployeeCount()
+BEGIN
+    DECLARE total_count INT;
+
+    -- Use an implicit cursor to count rows
+    SELECT COUNT(*) INTO total_count FROM Employee;
+
+    -- Display the total count
+    SELECT total_count AS 'Total Number of Employees';
+END //
+
+DELIMITER ;
+
+-- Call the procedure to display total number of employees
+CALL DisplayEmployeeCount();
+
+
+DELIMITER //
+
+CREATE PROCEDURE DisplayHighSalaryEmployees()
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE emp_id INT;
+    DECLARE emp_name VARCHAR(50);
+    DECLARE salary DECIMAL(10, 2);
+
+    -- Define the explicit cursor
+    DECLARE cursor_high_salary CURSOR FOR
+        SELECT Emp_id, Emp_Name, Salary 
+        FROM Employee 
+        WHERE Salary > 50000;
+
+    -- Handler for when cursor reaches the end
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    -- Open the cursor
+    OPEN cursor_high_salary;
+
+    -- Fetch and display records
+    emp_loop: LOOP
+        FETCH cursor_high_salary INTO emp_id, emp_name, salary;
+
+        IF done THEN
+            LEAVE emp_loop;
+        END IF;
+
+        -- Display the employee details
+        SELECT emp_id AS 'Employee ID', emp_name AS 'Employee Name', salary AS 'Salary';
+    END LOOP;
+
+    -- Close the cursor
+    CLOSE cursor_high_salary;
+END //
+
+DELIMITER ;
+
+-- Call the procedure to display employees with salary greater than 50,000
+CALL DisplayHighSalaryEmployees();
+
+
+DELIMITER //
+
+CREATE PROCEDURE DisplayEmployeeSalary(emp_id_input INT)
+BEGIN
+    DECLARE emp_salary DECIMAL(10, 2);
+
+    -- Define the parameterized cursor
+    DECLARE cursor_salary CURSOR FOR 
+        SELECT Salary 
+        FROM Employee 
+        WHERE Emp_id = emp_id_input;
+
+    -- Open the cursor
+    OPEN cursor_salary;
+
+    -- Fetch the salary and display it
+    FETCH cursor_salary INTO emp_salary;
+
+    IF emp_salary IS NOT NULL THEN
+        SELECT emp_salary AS 'Salary';
+    ELSE
+        SELECT 'Employee not found' AS 'Message';
+    END IF;
+
+    -- Close the cursor
+    CLOSE cursor_salary;
+END //
+
+DELIMITER ;
+
+-- Call the procedure to display the salary for employee with Emp_id = 1
+CALL DisplayEmployeeSalary(1);

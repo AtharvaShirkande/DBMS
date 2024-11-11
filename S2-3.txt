@@ -1,0 +1,149 @@
+CREATE TABLE Employee (
+    emp_id INT PRIMARY KEY,
+    dept_id INT,
+    emp_name VARCHAR(100),
+    DoJ DATE,
+    salary DECIMAL(10, 2),
+    commission DECIMAL(10, 2),
+    job_title VARCHAR(100)
+);
+
+
+CREATE TABLE Salary_Increment (
+    emp_id INT PRIMARY KEY,
+    new_salary DECIMAL(10, 2)
+);
+
+
+INSERT INTO Employee (emp_id, dept_id, emp_name, DoJ, salary, commission, job_title)
+VALUES (115, 10, 'John Doe', '2010-01-15', 50000, 5000, 'Software Engineer'),
+       (116, 20, 'Jane Smith', '2015-03-22', 45000, 4000, 'Analyst'),
+       (117, 30, 'Alice Brown', '2020-07-10', 40000, 3000, 'Developer');
+
+
+
+DELIMITER $$
+
+CREATE PROCEDURE update_salary(IN emp_id INT)
+BEGIN
+    DECLARE v_doj DATE;
+    DECLARE v_salary DECIMAL(10, 2);
+    DECLARE v_experience INT;
+    DECLARE v_new_salary DECIMAL(10, 2);
+    DECLARE emp_not_found CONDITION FOR SQLSTATE '45000';
+    DECLARE multiple_rows_found CONDITION FOR SQLSTATE '21000';
+
+    -- Fetch employee details and ensure only one row is returned
+    BEGIN
+        DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_doj = NULL;
+        DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET v_doj = NULL;
+
+        SELECT DoJ, salary INTO v_doj, v_salary
+        FROM Employee
+        WHERE emp_id = emp_id
+        LIMIT 1;
+
+        -- Check if no row was returned
+        IF v_doj IS NULL THEN
+            SIGNAL emp_not_found SET MESSAGE_TEXT = 'Employee not found';
+        END IF;
+    END;
+
+    -- Calculate experience (in years)
+    SET v_experience = TIMESTAMPDIFF(YEAR, v_doj, CURDATE());
+
+    -- Check experience and calculate new salary
+    IF v_experience > 10 THEN
+        SET v_new_salary = v_salary * 1.20;
+    ELSEIF v_experience > 5 THEN
+        SET v_new_salary = v_salary * 1.10;
+    ELSE
+        SET v_new_salary = v_salary * 1.05;
+    END IF;
+
+    -- Insert the incremented salary into Salary_Increment table
+    INSERT INTO Salary_Increment (emp_id, new_salary)
+    VALUES (emp_id, v_new_salary);
+
+    -- Success message
+    SELECT CONCAT('Salary of Employee ', emp_id, ' updated successfully.') AS message;
+END $$
+
+DELIMITER ;
+
+
+CALL update_salary(115);
+
+
+
+
+
+
+
+
+
+
+*******************************
+CREATE TABLE Employee (
+    emp_id INT PRIMARY KEY,
+    dept_id INT,
+    emp_name VARCHAR(100),
+    DoJ DATE,  -- Date of Joining
+    salary DECIMAL(10, 2),
+    commission DECIMAL(10, 2),
+    job_title VARCHAR(50)
+);
+
+CREATE TABLE Salary_Increment (
+    emp_id INT,
+    new_salary DECIMAL(10, 2),
+    FOREIGN KEY (emp_id) REFERENCES Employee(emp_id)
+);
+
+INSERT INTO Employee
+VALUES 
+(115, 1, 'Anusha', '2010-01-01', 50000, NULL, 'Developer'),
+(116, 2, 'Raj', '2015-02-15', 45000, NULL, 'Analyst'),
+(117, 1, 'Megha', '2018-05-10', 40000, NULL, 'Designer');
+
+
+DELIMITER //
+
+CREATE PROCEDURE UpdateSalary(IN in_emp_id INT)
+BEGIN
+    DECLARE v_salary DECIMAL(10, 2);
+    DECLARE v_doJ DATE;
+    DECLARE v_experience INT;
+    DECLARE v_new_salary DECIMAL(10, 2);
+
+   
+    SELECT salary, DoJ INTO v_salary, v_doJ
+    FROM Employee
+    WHERE emp_id = in_emp_id;  
+
+    
+    SET v_experience = TIMESTAMPDIFF(YEAR, v_doJ, CURDATE());
+
+   
+    IF v_experience > 10 THEN
+        SET v_new_salary = v_salary * 1.20;
+    ELSEIF v_experience > 5 THEN
+        SET v_new_salary = v_salary * 1.10;
+    ELSE
+        SET v_new_salary = v_salary * 1.05;
+    END IF;
+
+   
+    INSERT INTO Salary_Increment (emp_id, new_salary)
+    VALUES (in_emp_id, v_new_salary);
+
+   
+    UPDATE Employee SET salary = v_new_salary WHERE emp_id = in_emp_id;
+
+END //
+
+DELIMITER ;
+
+CALL UpdateSalary(115);
+SELECT * FROM Employee;
+SELECT * FROM Salary_Increment;

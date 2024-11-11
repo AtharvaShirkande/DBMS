@@ -1,0 +1,92 @@
+Create collection for Student{roll_no, name, class, dept, aggregate_marks}. Write Map Reduce Functions for
+following requirements.
+1. Finding the total marks of students of “TE” class department-wise.
+2. Finding the highest marks of students of “SE” class department-wise.
+3. Find Average marks of students of “BE” class department-wise.
+
+db.createCollection("Student");
+
+db.Student.insertMany([
+  { roll_no: "S1", name: "Alice", class: "TE", dept: "Computer Science", aggregate_marks: 75 },
+  { roll_no: "S2", name: "Bob", class: "TE", dept: "Mechanical", aggregate_marks: 85 },
+  { roll_no: "S3", name: "Charlie", class: "SE", dept: "Electrical", aggregate_marks: 78 },
+  { roll_no: "S4", name: "David", class: "TE", dept: "Computer Science", aggregate_marks: 92 },
+  { roll_no: "S5", name: "Eve", class: "BE", dept: "Mechanical", aggregate_marks: 88 },
+  { roll_no: "S6", name: "Frank", class: "BE", dept: "Electrical", aggregate_marks: 80 },
+  { roll_no: "S7", name: "Grace", class: "SE", dept: "Computer Science", aggregate_marks: 89 },
+  { roll_no: "S8", name: "Hank", class: "BE", dept: "Mechanical", aggregate_marks: 95 },
+  { roll_no: "S9", name: "Ivy", class: "TE", dept: "Electrical", aggregate_marks: 77 },
+  { roll_no: "S10", name: "Jack", class: "SE", dept: "Mechanical", aggregate_marks: 83 }
+]);
+
+
+var mapFunction1 = function () {
+  if (this.class === "TE") {
+    emit(this.dept, this.aggregate_marks);
+  }
+};
+
+var reduceFunction1 = function (key, values) {
+  return Array.sum(values);
+};
+
+db.Student.mapReduce(
+  mapFunction1,
+  reduceFunction1,
+  { out: "total_marks_TE_class" }
+);
+
+// Query the results
+db.total_marks_TE_class.find();
+
+
+var mapFunction2 = function () {
+  if (this.class === "SE") {
+    emit(this.dept, this.aggregate_marks);
+  }
+};
+
+var reduceFunction2 = function (key, values) {
+  return Math.max.apply(null, values);
+};
+
+db.Student.mapReduce(
+  mapFunction2,
+  reduceFunction2,
+  { out: "highest_marks_SE_class" }
+);
+
+// Query the results
+db.highest_marks_SE_class.find();
+
+
+var mapFunction3 = function () {
+  if (this.class === "BE") {
+    emit(this.dept, { sum: this.aggregate_marks, count: 1 });
+  }
+};
+
+var reduceFunction3 = function (key, values) {
+  let result = { sum: 0, count: 0 };
+  values.forEach(function (value) {
+    result.sum += value.sum;
+    result.count += value.count;
+  });
+  return result;
+};
+
+var finalizeFunction3 = function (key, reducedValue) {
+  return reducedValue.sum / reducedValue.count;
+};
+
+db.Student.mapReduce(
+  mapFunction3,
+  reduceFunction3,
+  {
+    out: "average_marks_BE_class",
+    finalize: finalizeFunction3
+  }
+);
+
+// Query the results
+db.average_marks_BE_class.find();

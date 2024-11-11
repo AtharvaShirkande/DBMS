@@ -1,0 +1,56 @@
+Create a collection Social_Media having fields as User_Id, User_Name, No_of_Posts, No_of_Friends,
+Friends_List, Interests. (Hint: Friends_List and Interests can be of array type)
+Insert 20 documents in the collection Social_Media. Write queries for following.
+1. List all the users from collection Social_Media in formatted manner.
+2. Find all users having number of posts greater than 100.
+3. List the user names and their respective Friens_List
+4. Display the user ids and Friends list of users who have more than 5 friends.
+5. Display all users with no of posts in descending order.
+
+
+db.createCollection("Social_Media");
+
+db.Social_Media.insertMany([
+  { User_Id: "U1", User_Name: "Alice", No_of_Posts: 50, No_of_Friends: 3, Friends_List: ["U2", "U3", "U4"], Interests: ["Music", "Travel"] },
+  { User_Id: "U2", User_Name: "Bob", No_of_Posts: 120, No_of_Friends: 7, Friends_List: ["U1", "U3", "U5", "U6", "U7", "U8", "U9"], Interests: ["Sports", "Cooking"] },
+  { User_Id: "U3", User_Name: "Charlie", No_of_Posts: 95, No_of_Friends: 5, Friends_List: ["U1", "U2", "U4", "U6", "U10"], Interests: ["Photography", "Gaming"] },
+  { User_Id: "U4", User_Name: "David", No_of_Posts: 35, No_of_Friends: 2, Friends_List: ["U1", "U3"], Interests: ["Reading", "Travel"] },
+  { User_Id: "U5", User_Name: "Eve", No_of_Posts: 150, No_of_Friends: 6, Friends_List: ["U2", "U7", "U8", "U9", "U10", "U11"], Interests: ["Writing", "Art"] },
+  { User_Id: "U6", User_Name: "Frank", No_of_Posts: 20, No_of_Friends: 1, Friends_List: ["U3"], Interests: ["Gaming", "Movies"] },
+  { User_Id: "U7", User_Name: "Grace", No_of_Posts: 80, No_of_Friends: 4, Friends_List: ["U2", "U5", "U8", "U9"], Interests: ["Fitness", "Reading"] },
+  { User_Id: "U8", User_Name: "Hank", No_of_Posts: 60, No_of_Friends: 3, Friends_List: ["U2", "U7", "U5"], Interests: ["Music", "Movies"] },
+  { User_Id: "U9", User_Name: "Ivy", No_of_Posts: 200, No_of_Friends: 8, Friends_List: ["U2", "U5", "U7", "U8", "U10", "U12", "U13", "U14"], Interests: ["Travel", "Food"] },
+  { User_Id: "U10", User_Name: "Jack", No_of_Posts: 110, No_of_Friends: 6, Friends_List: ["U3", "U5", "U9", "U12", "U15", "U16"], Interests: ["Technology", "Science"] },
+  { User_Id: "U11", User_Name: "Kara", No_of_Posts: 40, No_of_Friends: 2, Friends_List: ["U5", "U13"], Interests: ["Fitness", "Music"] },
+  { User_Id: "U12", User_Name: "Liam", No_of_Posts: 90, No_of_Friends: 5, Friends_List: ["U9", "U10", "U13", "U14", "U16"], Interests: ["Cooking", "Reading"] },
+  { User_Id: "U13", User_Name: "Mia", No_of_Posts: 85, No_of_Friends: 4, Friends_List: ["U9", "U11", "U12", "U14"], Interests: ["Science", "Gaming"] },
+  { User_Id: "U14", User_Name: "Noah", No_of_Posts: 75, No_of_Friends: 3, Friends_List: ["U9", "U12", "U13"], Interests: ["Movies", "Art"] },
+  { User_Id: "U15", User_Name: "Olivia", No_of_Posts: 115, No_of_Friends: 6, Friends_List: ["U10", "U12", "U16", "U17", "U18", "U19"], Interests: ["Art", "Technology"] },
+  { User_Id: "U16", User_Name: "Paul", No_of_Posts: 55, No_of_Friends: 3, Friends_List: ["U10", "U12", "U15"], Interests: ["Food", "Travel"] },
+  { User_Id: "U17", User_Name: "Quincy", No_of_Posts: 130, No_of_Friends: 5, Friends_List: ["U15", "U18", "U19", "U20", "U1"], Interests: ["Photography", "Technology"] },
+  { User_Id: "U18", User_Name: "Rachel", No_of_Posts: 45, No_of_Friends: 2, Friends_List: ["U17", "U19"], Interests: ["Writing", "Movies"] },
+  { User_Id: "U19", User_Name: "Sam", No_of_Posts: 180, No_of_Friends: 8, Friends_List: ["U15", "U17", "U18", "U20", "U2", "U3", "U4", "U5"], Interests: ["Sports", "Technology"] },
+  { User_Id: "U20", User_Name: "Tina", No_of_Posts: 65, No_of_Friends: 3, Friends_List: ["U17", "U19", "U5"], Interests: ["Gaming", "Fitness"] }
+]);
+
+
+db.Social_Media.find().pretty();
+
+db.Social_Media.find(
+  { No_of_Posts: { $gt: 100 } }
+);
+
+
+db.Social_Media.find(
+  {},
+  { User_Name: 1, Friends_List: 1, _id: 0 }
+);
+
+
+db.Social_Media.find(
+  { No_of_Friends: { $gt: 5 } },
+  { User_Id: 1, Friends_List: 1, _id: 0 }
+);
+
+
+db.Social_Media.find().sort({ No_of_Posts: -1 });

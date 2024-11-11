@@ -1,0 +1,96 @@
+Customer (CustID, Name, Cust_Address, Phone_no, Email_ID, Age)
+Branch (Branch ID, Branch_Name, Address)
+Account (Account_no, Branch ID, CustID, open_date, Account_type, Balance)
+1. Create the tables with referential integrity.
+2. Draw the ER diagram for the same.
+3. Create a View as Saving account displaying the customer details with the open date as 16/8/2018.
+4. Update the View with Cust_Address as Pune for CustID =103.
+5. Create a View as Loan account displaying the customer details with the open date as 16/2/2018.
+6. Create an Index on primary key column of table Customer.
+7. Create an Index on primary key column of table Branch.
+8. Create a sequence on Customer Table.
+9. Create synonym ‘Cust_info’ for branch tabl
+
+
+
+
+-- Create Customer Table
+CREATE TABLE Customer (
+    CustID INT PRIMARY KEY,
+    Name VARCHAR(50),
+    Cust_Address VARCHAR(100),
+    Phone_no VARCHAR(15),
+    Email_ID VARCHAR(50),
+    Age INT
+);
+
+-- Create Branch Table
+CREATE TABLE Branch (
+    BranchID INT PRIMARY KEY,
+    Branch_Name VARCHAR(50),
+    Address VARCHAR(100)
+);
+
+-- Create Account Table with Foreign Keys for referential integrity
+CREATE TABLE Account (
+    Account_no INT PRIMARY KEY,
+    BranchID INT,
+    CustID INT,
+    open_date DATE,
+    Account_type VARCHAR(20),
+    Balance DECIMAL(15, 2),
+    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID),
+    FOREIGN KEY (CustID) REFERENCES Customer(CustID)
+);
+
+-- Insert data into Customer
+INSERT INTO Customer (CustID, Name, Cust_Address, Phone_no, Email_ID, Age)
+VALUES 
+(101, 'John Doe', 'Mumbai', '1234567890', 'john@example.com', 35),
+(102, 'Jane Smith', 'Delhi', '2345678901', 'jane@example.com', 28),
+(103, 'Michael Johnson', 'Pune', '3456789012', 'michael@example.com', 40);
+
+-- Insert data into Branch
+INSERT INTO Branch (BranchID, Branch_Name, Address)
+VALUES 
+(1, 'Main Branch', 'Mumbai'),
+(2, 'North Branch', 'Delhi'),
+(3, 'West Branch', 'Pune');
+
+-- Insert data into Account
+INSERT INTO Account (Account_no, BranchID, CustID, open_date, Account_type, Balance)
+VALUES 
+(1001, 1, 101, '2018-08-16', 'Saving', 15000.00),
+(1002, 2, 102, '2018-02-16', 'Loan', 50000.00),
+(1003, 3, 103, '2018-08-16', 'Saving', 25000.00);
+
+
+CREATE VIEW SavingAccount AS
+SELECT Customer.CustID, Customer.Name, Customer.Cust_Address, Customer.Phone_no, Customer.Email_ID, Customer.Age, Account.open_date
+FROM Customer
+JOIN Account ON Customer.CustID = Account.CustID
+WHERE Account.Account_type = 'Saving' AND Account.open_date = '2018-08-16';
+
+UPDATE Customer
+SET Cust_Address = 'Pune'
+WHERE CustID = 103;
+
+
+CREATE VIEW LoanAccount AS
+SELECT Customer.CustID, Customer.Name, Customer.Cust_Address, Customer.Phone_no, Customer.Email_ID, Customer.Age, Account.open_date
+FROM Customer
+JOIN Account ON Customer.CustID = Account.CustID
+WHERE Account.Account_type = 'Loan' AND Account.open_date = '2018-02-16';
+
+
+CREATE INDEX idx_CustID ON Customer (CustID);
+
+
+CREATE INDEX idx_BranchID ON Branch (BranchID);
+
+
+--synonym
+CREATE VIEW Cust_info AS
+SELECT * FROM Branch;
+
+SELECT * FROM Cust_info;

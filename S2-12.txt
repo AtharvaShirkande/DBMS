@@ -1,0 +1,68 @@
+CREATE TABLE Employee (
+    emp_id INT PRIMARY KEY,
+    dept_id INT,
+    emp_name VARCHAR(100),
+    DoJ DATE,           -- Date of Joining
+    salary DECIMAL(10, 2),
+    commission DECIMAL(10, 2),
+    job_title VARCHAR(100)
+);
+
+CREATE TABLE Job_History (
+    emp_id INT,
+    old_job_title VARCHAR(100),
+    old_dept_id INT,
+    start_date DATE,
+    end_date DATE,
+    PRIMARY KEY (emp_id, old_job_title, start_date),
+    FOREIGN KEY (emp_id) REFERENCES Employee(emp_id)
+);
+
+-- Insert sample data into the Employee table
+INSERT INTO Employee (emp_id, dept_id, emp_name, DoJ, salary, commission, job_title)
+VALUES
+(1, 101, 'John Doe', '2020-01-01', 50000.00, 5000.00, 'Software Engineer'),
+(2, 102, 'Jane Smith', '2019-05-15', 60000.00, 6000.00, 'HR Manager'),
+(3, 103, 'Alice Johnson', '2021-08-20', 70000.00, 7000.00, 'Sales Manager');
+
+
+DELIMITER $$
+
+CREATE TRIGGER prevent_salary_decrease
+BEFORE UPDATE ON Employee
+FOR EACH ROW
+BEGIN
+    -- Ensure the salary is not decreased
+    IF NEW.salary < OLD.salary THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Salary cannot be decreased.';
+    END IF;
+END $$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER record_job_title_change
+AFTER UPDATE ON Employee
+FOR EACH ROW
+BEGIN
+    -- Check if job title has changed
+    IF OLD.job_title != NEW.job_title THEN
+        -- Insert record into job_history table
+        INSERT INTO job_history (emp_id, old_job_title, old_dept_id, start_date, end_date)
+        VALUES (OLD.emp_id, OLD.job_title, OLD.dept_id, OLD.DoJ, NOW());
+    END IF;
+END $$
+
+DELIMITER ;
+
+
+-- Update the job title of an employee (this will fire the trigger)
+UPDATE Employee
+SET job_title = 'Senior Manager'
+WHERE emp_id = 1;
+
+
+-- Check the job_history table for the inserted record
+SELECT * FROM job_history;
