@@ -1,0 +1,50 @@
+db.createCollection('product');
+db.product.insertOne({
+    "id": 0,
+    "name": "Leanne Flinn",
+    "email": "leanne.flinn@unilogic.com",
+    "work": "Unilogic",
+    "age": 27,
+    "gender": "Male",
+    "Salary": 16660,
+    "hobbies": "Acrobatics,Photography,Papier-Mache"
+});
+Gender Count 
+var mapFunction = function() {
+    
+    if (this.gender) {
+        emit(this.gender, 1);
+    }
+};
+var reduceFunction = function(key, values) {
+    return Array.sum(values);
+};
+db.product.mapReduce(
+    mapFunction,  
+    reduceFunction,  
+    { out: "gender_count" }  
+);
+db.gender_count.find().pretty();
+
+Hobby Count 
+var mapFunctionHobby = function() {
+    
+    if (this.hobbies) {
+        var hobbiesArray = this.hobbies.split(",");  
+        for (var i = 0; i < hobbiesArray.length; i++) {
+            emit(hobbiesArray[i].trim(), 1);  
+        }
+    }
+};
+var reduceFunctionHobby = function(key, values) {
+    // Sum all the values (1's) to get the count of each hobby
+    return Array.sum(values);
+};
+db.product.mapReduce(
+    mapFunctionHobby,  
+    reduceFunctionHobby,  
+    { out: "hobby_count" }  
+);
+db.hobby_count.find().pretty();
+
+
